@@ -1,0 +1,45 @@
+class Produkt {
+    String nazwa;
+    double cena;
+
+    Produkt(String nazwa, double cena) {
+        this.nazwa = nazwa;
+        this.cena = cena;
+    }
+
+    void pokazInformacje() {
+        System.out.println("Nazwa: " + nazwa);
+        System.out.println("Cena: " + cena + " zł");
+    }
+}
+
+class Elektronika extends Produkt {
+    String marka;
+
+    Elektronika(String nazwa, double cena, String marka) {
+        super(nazwa, cena);
+        this.marka = marka;
+    }
+
+    @Override
+    void pokazInformacje() {
+        System.out.println("Nazwa: " + nazwa);
+        System.out.println("Cena: " + cena + " zł");
+        System.out.println("Marka: " + marka);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+
+        Produkt produkt = new Produkt("Książka", 39.99);
+        produkt.pokazInformacje();
+
+        System.out.println();
+
+        Elektronika telefon =
+                new Elektronika("Telefon", 1999.99, "Samsung");
+
+        telefon.pokazInformacje();
+    }
+}
