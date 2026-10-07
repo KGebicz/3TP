@@ -1,0 +1,21 @@
+  private void openFile() {
+        String fileName = fileNameInput.getText().toString().trim();
+
+        if (fileName.isEmpty()) {
+            Toast.makeText(this, "Podaj nazwę pliku", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        StringBuilder content = new StringBuilder();
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(getAssets().open(fileName), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+            editor.setText(content.toString());
+        } catch (IOException e) {
+            Toast.makeText(this, "Nie można otworzyć pliku: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
