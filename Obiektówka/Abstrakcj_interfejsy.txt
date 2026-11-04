@@ -1,0 +1,235 @@
+import java.util.ArrayList;
+import java.util.List;
+
+// ============================================================
+// 1. INTERFEJSY
+// ============================================================
+
+// Interfejs opisuje ZDOLNOŚĆ ("potrafi") - może ją mieć dowolna klasa.
+interface Latajacy {
+
+    // Stała: automatycznie public static final
+    int MAKSYMALNA_WYSOKOSC = 10_000;
+
+    // Metoda abstrakcyjna: automatycznie public abstract
+    void lec();
+
+    // Metoda domyślna (od Javy 8): ma implementację, klasa może ją nadpisać
+    default void wzbijSie() {
+        loguj("Wzbijam się w powietrze (max " + MAKSYMALNA_WYSOKOSC + " m)");
+        lec();
+    }
+
+    // Metoda statyczna (od Javy 8): należy do interfejsu, nie do obiektu
+    static Latajacy bezRuchu() {
+        return () -> System.out.println("   ...unoszę się bez ruchu");
+    }
+
+    // Metoda prywatna (od Javy 9): pomocnicza dla metod default
+    private void loguj(String tekst) {
+        System.out.println("[LOT] " + tekst);
+    }
+}
+
+// Interfejs funkcyjny: dokładnie jedna metoda abstrakcyjna -> można użyć lambdy
+@FunctionalInterface
+interface Zapisywalny {
+    String doZapisu();
+}
+
+// Interfejs znacznikowy: brak metod, tylko "oznacza" klasę
+interface Oswojony {
+}
+
+// Interfejs może rozszerzać inny interfejs
+interface Akrobata extends Latajacy {
+    void zrobPiruet();
+}
+
+// ============================================================
+// 2. KLASA ABSTRAKCYJNA
+// ============================================================
+
+// Wspólna baza dla spokrewnionych klas ("jest rodzajem" zwierzęcia).
+// Implementuje interfejs Zapisywalny tylko częściowo/w całości w jednym miejscu.
+abstract class Zwierze implements Zapisywalny {
+
+    private final String imie;   // stan obiektu - w interfejsie byłoby to niemożliwe
+    protected int energia;
+
+    // Konstruktor istnieje i jest wywoływany przez konstruktory podklas
+    protected Zwierze(String imie) {
+        this.imie = imie;
+        this.energia = 50;
+    }
+
+    // Metoda abstrakcyjna: tylko sygnatura, brak ciała.
+    // Każda niebędąca abstrakcyjną podklasa MUSI ją zaimplementować.
+    public abstract String dajGlos();
+
+    // Zwykła metoda ze wspólnym kodem - nie trzeba jej powielać w podklasach
+    public void jedz() {
+        energia += 10;
+        System.out.println(imie + " je. Energia: " + energia);
+    }
+
+    public String getImie() {
+        return imie;
+    }
+
+    // Implementacja metody z interfejsu Zapisywalny na poziomie klasy abstrakcyjnej
+    @Override
+    public String doZapisu() {
+        return getClass().getSimpleName() + ";" + imie + ";" + energia;
+    }
+}
+
+// ============================================================
+// 3. KLASY KONKRETNE
+// ============================================================
+
+class Pies extends Zwierze implements Oswojony {
+
+    public Pies(String imie) {
+        super(imie);
+    }
+
+    @Override
+    public String dajGlos() {
+        return "Hau! Hau!";
+    }
+}
+
+// Dziedziczy po JEDNEJ klasie, ale implementuje WIELE interfejsów
+class Kaczka extends Zwierze implements Latajacy, Oswojony {
+
+    public Kaczka(String imie) {
+        super(imie);
+    }
+
+    @Override
+    public String dajGlos() {
+        return "Kwa! Kwa!";
+    }
+
+    @Override
+    public void lec() {
+        energia -= 5;
+        System.out.println("   " + getImie() + " macha skrzydłami i leci. Energia: " + energia);
+    }
+}
+
+class Papuga extends Zwierze implements Akrobata {
+
+    public Papuga(String imie) {
+        super(imie);
+    }
+
+    @Override
+    public String dajGlos() {
+        return "Cześć, cześć!";
+    }
+
+    @Override
+    public void lec() {
+        System.out.println("   " + getImie() + " szybuje pod sufitem.");
+    }
+
+    @Override
+    public void zrobPiruet() {
+        System.out.println("   " + getImie() + " robi piruet w powietrzu!");
+    }
+
+    // Nadpisanie metody domyślnej z interfejsu (opcjonalne)
+    @Override
+    public void wzbijSie() {
+        System.out.println("[LOT] " + getImie() + " wzbija się z efektownym świstem");
+        lec();
+    }
+}
+
+// Klasa NIEZWIĄZANA ze zwierzętami, a też "potrafi latać" - sens interfejsu
+class Samolot implements Latajacy, Zapisywalny {
+
+    private final String model;
+
+    public Samolot(String model) {
+        this.model = model;
+    }
+
+    @Override
+    public void lec() {
+        System.out.println("   Samolot " + model + " leci na wysokości przelotowej.");
+    }
+
+    @Override
+    public String doZapisu() {
+        return "Samolot;" + model;
+    }
+}
+
+// ============================================================
+// 4. PROGRAM GŁÓWNY - polimorfizm i programowanie względem interfejsów
+// ============================================================
+
+public class Main {
+
+    // Metoda zna tylko INTERFEJS - nie obchodzi jej, kto go implementuje
+    static void zapisz(Zapisywalny obiekt) {
+        System.out.println("   Zapisuję: " + obiekt.doZapisu());
+    }
+
+    static void pozwolLatac(Latajacy latajacy) {
+        latajacy.wzbijSie();
+    }
+
+    public static void main(String[] args) {
+
+        // Zwierze z = new Zwierze("X");  // BŁĄD KOMPILACJI: klasa abstrakcyjna
+        // Latajacy l = new Latajacy();   // BŁĄD KOMPILACJI: interfejs
+
+        System.out.println("=== Polimorfizm: zmienna typu klasy abstrakcyjnej ===");
+        List<Zwierze> zwierzeta = new ArrayList<>();
+        zwierzeta.add(new Pies("Burek"));
+        zwierzeta.add(new Kaczka("Danusia"));
+        zwierzeta.add(new Papuga("Ara"));
+
+        for (Zwierze z : zwierzeta) {
+            // Wykona się wersja metody właściwa dla RZECZYWISTEGO typu obiektu
+            System.out.println(z.getImie() + " mówi: " + z.dajGlos());
+            z.jedz();
+        }
+
+        System.out.println("\n=== Programowanie względem interfejsu Latajacy ===");
+        List<Latajacy> latajace = new ArrayList<>();
+        latajace.add(new Kaczka("Kaczor"));
+        latajace.add(new Papuga("Kakadu"));
+        latajace.add(new Samolot("Boeing 737"));   // zupełnie niepowiązana klasa
+        latajace.add(Latajacy.bezRuchu());          // metoda statyczna interfejsu
+
+        for (Latajacy l : latajace) {
+            pozwolLatac(l);
+        }
+
+        System.out.println("\n=== Interfejs rozszerzający interfejs ===");
+        Akrobata papuga = new Papuga("Jaco");
+        papuga.zrobPiruet();
+
+        System.out.println("\n=== Interfejs funkcyjny + lambda ===");
+        Zapisywalny lambda = () -> "Zapis z wyrażenia lambda";
+        zapisz(lambda);
+        zapisz(new Samolot("Airbus A320"));
+        for (Zwierze z : zwierzeta) {
+            zapisz(z);
+        }
+
+        System.out.println("\n=== Sprawdzanie typu (interfejs znacznikowy) ===");
+        for (Zwierze z : zwierzeta) {
+            String info = (z instanceof Oswojony) ? "jest oswojony" : "nie jest oswojony";
+            System.out.println(z.getImie() + " " + info
+                    + (z instanceof Latajacy ? " i potrafi latać" : ""));
+        }
+
+        System.out.println("\nStała z interfejsu: " + Latajacy.MAKSYMALNA_WYSOKOSC);
+    }
+}
